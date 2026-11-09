@@ -44,8 +44,8 @@ tempfile.workspace = true
 toml.workspace = true
 ulid.workspace = true
 unicode-normalization.workspace = true
-vulcan-embed = { path = "../vulcan-embed", version = "0.4.0-yatmita.2", optional = true }
-vulcan-sync = { path = "../vulcan-sync", version = "0.4.0-yatmita.2" }
+vulcan-embed = { path = "../vulcan-embed", version = "0.4.0-yatmita.3", optional = true }
+vulcan-sync = { path = "../vulcan-sync", version = "0.4.0-yatmita.3" }
 yaml_serde.workspace = true
 zip.workspace = true
 
