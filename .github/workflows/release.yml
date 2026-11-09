@@ -276,8 +276,20 @@ jobs:
           --base-url '${{ github.server_url }}/${{ github.repository }}/releases/download/v${{ needs.gate.outputs.version }}'
           --output artifacts
 
-      # yatmita fork: the stable self-update channel is upstream's (signed with
-      # upstream's keys) and rejects prerelease versions, so it is not rendered here.
+      # yatmita fork: update_channel.py rejects a prerelease version on the stable
+      # channel, so this step only runs for plain release versions.
+      - name: Render stable update channel
+        if: ${{ !contains(needs.gate.outputs.version, '-') }}
+        shell: bash
+        run: |
+          published_at="$(git show -s --format=%cI "$GITHUB_SHA")"
+          python scripts/release/update_channel.py \
+            --manifest 'artifacts/vulcan-${{ needs.gate.outputs.version }}-manifest.json' \
+            --channel stable \
+            --base-url '${{ github.server_url }}/${{ github.repository }}/releases/download/v${{ needs.gate.outputs.version }}' \
+            --source-commit "$GITHUB_SHA" \
+            --published-at "$published_at" \
+            --output artifacts
 
       - name: Remove internal per-artifact records
         run: rm artifacts/*.artifact.json artifacts/*.sha256
