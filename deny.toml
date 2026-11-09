@@ -4,6 +4,8 @@ all-features = true
 [advisories]
 ignore = [
     { id = "RUSTSEC-2023-0071", reason = "jsonwebtoken uses rsa only for external JWT public-key verification; Vulcan performs no RSA private-key signing or decryption, and local tokens use HS256" },
+    { id = "RUSTSEC-2026-0387", reason = "crypto-bigint 0.5 reaches Vulcan only through jsonwebtoken's p256/p384, used solely to verify external ES256/ES384 JWTs against public JWKs; Vulcan holds no EC private keys, local tokens use HS256, and jsonwebtoken 11.1 still depends on crypto-bigint 0.5" },
+    { id = "RUSTSEC-2026-0459", reason = "yatmita fork: the SQLite bug needs a crafted database file opened together with a crafted -wal sibling; Vulcan opens only the cache databases it creates itself under .vulcan/ or the user state directory, and a vault shared with other devices keeps .vulcan/ out of sync. The fix needs rusqlite 0.41 (libsqlite3-sys 0.39), a semver-incompatible update not taken on the 0.4.0 line" },
 ]
 
 [licenses]
