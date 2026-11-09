@@ -90,6 +90,11 @@ jobs:
 
   build:
     needs: [gate, assets]
+    # yatmita fork: attest the build provenance of every packaged file
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     strategy:
       fail-fast: false
       matrix:
@@ -229,6 +234,11 @@ jobs:
           --target '${{ matrix.target }}'
           --version '${{ needs.gate.outputs.version }}'
 
+      - name: Attest build provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: "dist/*"
+
       - name: Upload canonical archive
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -263,17 +273,20 @@ jobs:
         run: >-
           python scripts/release/channels.py
           --manifest 'artifacts/vulcan-${{ needs.gate.outputs.version }}-manifest.json'
-          --base-url 'https://github.com/tionis/vulcan/releases/download/v${{ needs.gate.outputs.version }}'
+          --base-url '${{ github.server_url }}/${{ github.repository }}/releases/download/v${{ needs.gate.outputs.version }}'
           --output artifacts
 
+      # yatmita fork: update_channel.py rejects a prerelease version on the stable
+      # channel, so this step only runs for plain release versions.
       - name: Render stable update channel
+        if: ${{ !contains(needs.gate.outputs.version, '-') }}
         shell: bash
         run: |
           published_at="$(git show -s --format=%cI "$GITHUB_SHA")"
           python scripts/release/update_channel.py \
             --manifest 'artifacts/vulcan-${{ needs.gate.outputs.version }}-manifest.json' \
             --channel stable \
-            --base-url 'https://github.com/tionis/vulcan/releases/download/v${{ needs.gate.outputs.version }}' \
+            --base-url '${{ github.server_url }}/${{ github.repository }}/releases/download/v${{ needs.gate.outputs.version }}' \
             --source-commit "$GITHUB_SHA" \
             --published-at "$published_at" \
             --output artifacts
@@ -288,4 +301,5 @@ jobs:
           # The stable channel resolves through `releases/latest`; the signer
           # promotes this release only after its descriptor is signed.
           make_latest: false
+          prerelease: ${{ contains(needs.gate.outputs.version, '-') }}
           files: artifacts/*
